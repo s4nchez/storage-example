@@ -4,10 +4,8 @@ import * as aws from "@pulumi/aws";
 // Create an AWS resource (S3 Bucket)
 const bucket = new aws.s3.Bucket("http4k-storage-example");
 
-// Export the name of the bucket
-export const bucketName = bucket.id;
-
-const defaultRole = new aws.iam.Role("http4k-storage-example-lambda-default-role", {assumeRolePolicy: `{
+const defaultRole = new aws.iam.Role("http4k-storage-example-lambda-default-role", {
+    assumeRolePolicy: `{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -20,7 +18,8 @@ const defaultRole = new aws.iam.Role("http4k-storage-example-lambda-default-role
     }
   ]
 }
-`});
+`
+});
 
 const storageFunction = new aws.lambda.Function("http4k-storage-example-lambda", {
     code: new pulumi.asset.FileArchive("build/distributions/storage-examples-1.0-SNAPSHOT.zip"),
@@ -34,3 +33,31 @@ const apiGatewayPermission = new aws.lambda.Permission("http4k-storage-example-l
     "function": storageFunction.name,
     principal: "apigateway.amazonaws.com"
 });
+
+const storageApi = new aws.apigatewayv2.Api("http4k-storage-example-api", {
+    protocolType: "HTTP"
+});
+
+
+const storageApiDefaultStage = new aws.apigatewayv2.Stage("default", {
+    apiId: storageApi.id,
+    autoDeploy: true,
+    name: "$default"
+});
+
+
+const storageApiLambdaIntegration = new aws.apigatewayv2.Integration("http4k-storage-example-api-lambda-integration", {
+    apiId: storageApi.id,
+    integrationType: "AWS_PROXY",
+    integrationUri: storageFunction.arn,
+    payloadFormatVersion: "1.0"
+});
+
+const storageApiDefaultRoute = new aws.apigatewayv2.Route("http4k-storage-example-api-route", {
+    apiId: storageApi.id,
+    routeKey: `$default`,
+    target: pulumi.interpolate `integrations/${storageApiLambdaIntegration.id}`
+});
+
+export const bucketName = bucket.id;
+export const stageUri = storageApiDefaultStage.invokeUrl;
