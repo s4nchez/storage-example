@@ -1,5 +1,6 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
+import {RolePolicyAttachment} from "@pulumi/aws/iam";
 
 const bucket = new aws.s3.Bucket("http4k-storage-example");
 
@@ -20,9 +21,11 @@ const defaultRole = new aws.iam.Role("http4k-storage-example-lambda-default-role
 `
 });
 
-const logGroupApi = new aws.cloudwatch.LogGroup("http4k-storage-example-api-route", {
-    name: "http4k-storage-example",
-});
+new RolePolicyAttachment("http4k-storage-example-lambda-default-role-policy",
+    {
+        role: defaultRole,
+        policyArn: aws.iam.ManagedPolicies.AWSLambdaBasicExecutionRole
+    });
 
 const storageFunction = new aws.lambda.Function("http4k-storage-example-lambda", {
     code: new pulumi.asset.FileArchive("build/distributions/storage-examples-1.0-SNAPSHOT.zip"),
@@ -32,11 +35,8 @@ const storageFunction = new aws.lambda.Function("http4k-storage-example-lambda",
     timeout: 15
 });
 
-const loggingPermission = new aws.lambda.Permission("http4k-storage-example-lambda-logging-permission", {
-    action: "lambda:InvokeFunction",
-    "function": storageFunction.name,
-    principal: "logs.eu-west-1.amazonaws.com",
-    sourceArn: pulumi.interpolate`${logGroupApi.arn}:*`,
+const logGroupApi = new aws.cloudwatch.LogGroup("http4k-storage-example-api-route", {
+    name: "http4k-storage-example",
 });
 
 const apiGatewayPermission = new aws.lambda.Permission("http4k-storage-example-lambda-gateway-permission", {
