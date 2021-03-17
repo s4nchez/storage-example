@@ -1,0 +1,3 @@
+name: storage-examples
+runtime: nodejs
+description: Storage deployments on aws
