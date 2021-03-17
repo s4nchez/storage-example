@@ -29,6 +29,7 @@ dependencies {
 
     implementation platform("org.http4k:http4k-bom:4.4.1.0")
     implementation("org.http4k:http4k-contract")
+    implementation("org.http4k:http4k-serverless-lambda")
     implementation("org.http4k:http4k-format-jackson")
     implementation("org.webjars:swagger-ui:3.35.1")
 }
