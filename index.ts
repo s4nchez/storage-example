@@ -1,7 +1,6 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 
-// Create an AWS resource (S3 Bucket)
 const bucket = new aws.s3.Bucket("http4k-storage-example");
 
 const defaultRole = new aws.iam.Role("http4k-storage-example-lambda-default-role", {
@@ -38,13 +37,11 @@ const storageApi = new aws.apigatewayv2.Api("http4k-storage-example-api", {
     protocolType: "HTTP"
 });
 
-
 const storageApiDefaultStage = new aws.apigatewayv2.Stage("default", {
     apiId: storageApi.id,
     autoDeploy: true,
     name: "$default"
 });
-
 
 const storageApiLambdaIntegration = new aws.apigatewayv2.Integration("http4k-storage-example-api-lambda-integration", {
     apiId: storageApi.id,
