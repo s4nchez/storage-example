@@ -1,31 +1,63 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
-import {RolePolicyAttachment} from "@pulumi/aws/iam";
 
 const bucket = new aws.s3.Bucket("http4k-storage-example");
 
+const lambdaPolicy = new aws.iam.Policy("http4k-storage-example-lambda-permissions", {
+    policy: pulumi.interpolate`{
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:PutLogEvents",
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream"
+                  ],
+                  "Resource": "arn:aws:logs:*:*:*"
+                },
+                {
+                  "Sid": "",
+                  "Effect": "Allow",
+                  "Action": "s3:ListBucket",
+                  "Resource": "arn:aws:s3:::${bucket.id}"
+                },
+                {
+                  "Sid": "",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:PutObject",
+                    "s3:GetObject",
+                    "s3:ListBucket",
+                    "s3:DeleteObject"
+                  ],
+                  "Resource": "arn:aws:s3:::${bucket.id}/*"
+                }
+              ]
+            }`
+})
+
 const defaultRole = new aws.iam.Role("http4k-storage-example-lambda-default-role", {
-    assumeRolePolicy: `{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+    assumeRolePolicy: pulumi.interpolate`{
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Action": "sts:AssumeRole",
+          "Principal": {
+            "Service": "lambda.amazonaws.com"
+          },
+          "Effect": "Allow",
+          "Sid": ""
+        }
+      ]
     }
-  ]
-}
-`
+    `
 });
 
-new RolePolicyAttachment("http4k-storage-example-lambda-default-role-policy",
-    {
-        role: defaultRole,
-        policyArn: aws.iam.ManagedPolicies.AWSLambdaBasicExecutionRole
-    });
+new aws.iam.RolePolicy("http4k-storage-example-lambda-role-policy", {
+    role: defaultRole,
+    policy: lambdaPolicy.policy
+});
 
 const storageFunction = new aws.lambda.Function("http4k-storage-example-lambda", {
     code: new pulumi.asset.FileArchive("build/distributions/storage-examples-1.0-SNAPSHOT.zip"),
@@ -33,7 +65,12 @@ const storageFunction = new aws.lambda.Function("http4k-storage-example-lambda",
     role: defaultRole.arn,
     runtime: "java11",
     timeout: 15,
-    memorySize: 512
+    memorySize: 512,
+    environment: {
+        variables: {
+            "BUCKET": bucket.id
+        }
+    }
 });
 
 const logGroupApi = new aws.cloudwatch.LogGroup("http4k-storage-example-api-route", {
@@ -41,7 +78,7 @@ const logGroupApi = new aws.cloudwatch.LogGroup("http4k-storage-example-api-rout
     retentionInDays: 1
 });
 
-const apiGatewayPermission = new aws.lambda.Permission("http4k-storage-example-lambda-gateway-permission", {
+new aws.lambda.Permission("http4k-storage-example-lambda-gateway-permission", {
     action: "lambda:InvokeFunction",
     "function": storageFunction.name,
     principal: "apigateway.amazonaws.com"
