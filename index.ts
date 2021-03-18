@@ -1,6 +1,8 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as aws from "@pulumi/aws";
 
+const config = new pulumi.Config();
+
 const bucket = new aws.s3.Bucket("http4k-storage-example");
 
 const lambdaPolicy = new aws.iam.Policy("http4k-storage-example-lambda-permissions", {
@@ -68,7 +70,8 @@ const storageFunction = new aws.lambda.Function("http4k-storage-example-lambda",
     memorySize: 512,
     environment: {
         variables: {
-            "BUCKET": bucket.id
+            "BUCKET": bucket.id,
+            "API_TOKEN": config.requireSecret("api-token")
         }
     }
 });

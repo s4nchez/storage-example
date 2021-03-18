@@ -12,6 +12,8 @@ import org.http4k.connect.amazon.s3.S3Bucket
 import org.http4k.connect.storage.S3
 import org.http4k.connect.storage.Storage
 import org.http4k.connect.storage.asHttpHandler
+import org.http4k.contract.security.BasicAuthSecurity
+import org.http4k.core.Credentials
 import org.http4k.lens.string
 import org.http4k.serverless.ApiGatewayV1LambdaFunction
 
@@ -29,4 +31,9 @@ private fun s3Storage(): Storage<Entry> {
     return Storage.S3(S3Bucket.Http(bucketName, region, { credentials }))
 }
 
-class StorageFunction : ApiGatewayV1LambdaFunction(s3Storage().asHttpHandler())
+private fun security() = BasicAuthSecurity(
+    "http4k-storage-example",
+    Credentials("http4k", EnvironmentKey.string().required("API_TOKEN")(Environment.ENV))
+)
+
+class StorageFunction : ApiGatewayV1LambdaFunction(s3Storage().asHttpHandler(storageSecurity = security()))
