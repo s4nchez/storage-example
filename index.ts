@@ -32,11 +32,13 @@ const storageFunction = new aws.lambda.Function("http4k-storage-example-lambda",
     handler: "org.http4k.example.StorageFunction",
     role: defaultRole.arn,
     runtime: "java11",
-    timeout: 15
+    timeout: 15,
+    memorySize: 512
 });
 
 const logGroupApi = new aws.cloudwatch.LogGroup("http4k-storage-example-api-route", {
     name: "http4k-storage-example",
+    retentionInDays: 1
 });
 
 const apiGatewayPermission = new aws.lambda.Permission("http4k-storage-example-lambda-gateway-permission", {
@@ -69,7 +71,7 @@ const storageApiLambdaIntegration = new aws.apigatewayv2.Integration("http4k-sto
 const storageApiDefaultRoute = new aws.apigatewayv2.Route("http4k-storage-example-api-route", {
     apiId: storageApi.id,
     routeKey: `$default`,
-    target: pulumi.interpolate `integrations/${storageApiLambdaIntegration.id}`
+    target: pulumi.interpolate`integrations/${storageApiLambdaIntegration.id}`
 });
 
 export const bucketName = bucket.id;
