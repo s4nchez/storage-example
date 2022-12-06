@@ -22,12 +22,13 @@ repositories {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib"
-    implementation platform("org.http4k:http4k-connect-bom:2.15.4.0")
+    implementation platform("org.http4k:http4k-connect-bom:3.25.4.0")
     implementation "org.http4k:http4k-connect-amazon-s3"
     implementation "org.http4k:http4k-connect-storage-http"
     implementation "org.http4k:http4k-connect-storage-s3"
+    implementation "org.http4k:http4k-connect-amazon-containercredentials"
 
-    implementation platform("org.http4k:http4k-bom:4.4.1.0")
+    implementation platform("org.http4k:http4k-bom:4.34.2.0")
     implementation("org.http4k:http4k-contract")
     implementation("org.http4k:http4k-serverless-lambda")
     implementation("org.http4k:http4k-cloudnative")

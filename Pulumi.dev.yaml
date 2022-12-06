@@ -1,4 +1,4 @@
 config:
   aws:region: us-east-1
   storage-examples:api-token:
-    secure: AAABAAGCxTB/B1nYH49uaKKedh2Qsp+P96IngZ0efaXukAS/en4Sj/UCdA==
+    secure: AAABAO+CwRqlDyPV+jCN3KlRvj8CwBsROEWt5CnXMMdDrnI=
