@@ -67,6 +67,10 @@ const storageFunction = new aws.lambda.Function("http4k-storage-example-lambda",
     role: defaultRole.arn,
     runtime: "java11",
     timeout: 15,
+    snapStart: {
+        applyOn: "PublishedVersions",
+    },
+    publish: true,
     memorySize: 512,
     environment: {
         variables: {
@@ -104,7 +108,7 @@ const storageApiDefaultStage = new aws.apigatewayv2.Stage("default", {
 const storageApiLambdaIntegration = new aws.apigatewayv2.Integration("http4k-storage-example-api-lambda-integration", {
     apiId: storageApi.id,
     integrationType: "AWS_PROXY",
-    integrationUri: storageFunction.arn,
+    integrationUri: storageFunction.qualifiedInvokeArn,
     payloadFormatVersion: "1.0"
 });
 
