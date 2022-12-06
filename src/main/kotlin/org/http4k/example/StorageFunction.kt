@@ -5,6 +5,7 @@ package org.http4k.example
 import dev.forkhandles.result4k.onFailure
 import org.http4k.aws.AwsCredentials
 import org.http4k.cloudnative.env.Environment
+import org.http4k.cloudnative.env.Environment.Companion.ENV
 import org.http4k.cloudnative.env.EnvironmentKey
 import org.http4k.connect.amazon.containercredentials.ContainerCredentials
 import org.http4k.connect.amazon.containercredentials.Http
@@ -25,7 +26,7 @@ import org.http4k.serverless.ApiGatewayV1LambdaFunction
 data class Entry(val value: String)
 
 private fun s3Storage(): Storage<Entry> {
-    val environment = Environment.ENV
+    val environment = ENV
     val bucketName = EnvironmentKey.string().map(BucketName.Companion::of).required("BUCKET")(environment)
     val region = EnvironmentKey.string().map(Region.Companion::of).required("AWS_REGION")(environment)
     val credentialsUri = EnvironmentKey.uri().required("AWS_CONTAINER_CREDENTIALS_FULL_URI")(environment)
@@ -40,7 +41,7 @@ private fun s3Storage(): Storage<Entry> {
 
 private fun security() = BasicAuthSecurity(
     "http4k-storage-example",
-    Credentials("http4k", EnvironmentKey.string().required("API_TOKEN")(Environment.ENV))
+    Credentials("http4k", EnvironmentKey.string().required("API_TOKEN")(ENV))
 )
 
 class StorageFunction : ApiGatewayV1LambdaFunction(s3Storage().asHttpHandler(storageSecurity = security()))
