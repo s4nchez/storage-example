@@ -87,7 +87,7 @@ const logGroupApi = new aws.cloudwatch.LogGroup("http4k-storage-example-api-rout
 
 new aws.lambda.Permission("http4k-storage-example-lambda-gateway-permission", {
     action: "lambda:InvokeFunction",
-    "function": storageFunction.name,
+    "function": pulumi.interpolate`${storageFunction.arn}:${storageFunction.version}`,
     principal: "apigateway.amazonaws.com"
 });
 
